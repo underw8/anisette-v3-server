@@ -12,6 +12,11 @@ permissions:
   contents: read
   packages: write
 
+# The merge job deletes every per-arch tag, so runs must not overlap.
+concurrency:
+  group: publish
+  cancel-in-progress: false
+
 env:
   IMAGE: ghcr.io/${{ github.repository }}
 
@@ -64,3 +69,13 @@ jobs:
           docker buildx imagetools create \
             -t "$IMAGE:latest" -t "$IMAGE:$GITHUB_SHA" \
             "$IMAGE:$GITHUB_SHA-amd64" "$IMAGE:$GITHUB_SHA-arm64"
+      # Per-arch tags are build intermediates. Deleting their manifests is safe:
+      # the multi-arch index references the platform manifests, not these.
+      - name: Delete per-arch tags
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSIONS: /users/${{ github.repository_owner }}/packages/container/${{ github.event.repository.name }}/versions
+        run: |
+          gh api --paginate "$VERSIONS" \
+            -q '.[] | select(any(.metadata.container.tags[]; test("-(amd64|arm64)$"))) | .id' \
+            | xargs -r -I{} gh api -X DELETE "$VERSIONS/{}"
