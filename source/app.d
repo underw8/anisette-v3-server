@@ -1,5 +1,6 @@
 import core.time;
 import core.memory;
+import core.stdc.stdio : _IOLBF;
 
 import std.algorithm.searching;
 import std.array;
@@ -13,6 +14,7 @@ import std.json;
 import std.math;
 import std.net.curl;
 import std.parallelism;
+import std.stdio : stdout;
 import process = std.process;
 import std.path;
 import std.uni;
@@ -46,6 +48,9 @@ __gshared Device v1Device;
 __gshared Duration timeout;
 
 int main(string[] args) {
+	// Docker pipes stdout, which would otherwise be block-buffered.
+	stdout.setvbuf(0, _IOLBF);
+
 	debug {
 		configureLoggingProvider(new shared DefaultProvider(true, Levels.DEBUG));
 	} else {
