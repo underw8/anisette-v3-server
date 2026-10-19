@@ -24,12 +24,10 @@ COPY --from=builder /opt/anisette-v3-server /opt/anisette-v3-server
 RUN mkdir -p /opt/anisette-v3/provisioning
 
 # Setup rootless user which works with the volume mount
+# The binary stays root-owned; the user only owns the data directories.
 RUN useradd -ms /bin/bash Alcoholic \
  && mkdir /home/Alcoholic/.config/anisette-v3/lib/ -p \
- && chown -R Alcoholic /home/Alcoholic/ \
- && chmod -R +wx /home/Alcoholic/ \
- && chown -R Alcoholic /opt/ \
- && chmod -R +wx /opt/
+ && chown -R Alcoholic /home/Alcoholic/ /opt/anisette-v3/
 
 # Run the artefact
 USER Alcoholic

@@ -8,7 +8,7 @@ anisette-v3) but it can also be used with AltServer-Linux.
 ## Run using Docker
 
 ```bash
-docker run -d --restart always --name anisette-v3 -p 6969:6969 --volume anisette-v3_data:/home/Alcoholic/.config/anisette-v3/lib/ dadoum/anisette-v3-server
+docker run -d --restart always --name anisette-v3 -p 6969:6969 --volume anisette-v3_data:/home/Alcoholic/.config/anisette-v3/lib/ ghcr.io/underw8/anisette-v3-server
 ```
 
 ## Compile using dub
@@ -22,12 +22,12 @@ stat anisette-v3-server
 
 ## Build the Docker image locally
 
-The GitHub Actions workflow publishes `dadoum/anisette-v3-server` for `linux/386`, `linux/amd64`, and `linux/arm64/v8` only. `linux/arm/v7` is not built by Actions because LDC builds under QEMU are unreliable for that target.
+The GitHub Actions workflow publishes `ghcr.io/underw8/anisette-v3-server` for `linux/386`, `linux/amd64`, and `linux/arm64/v8` only. `linux/arm/v7` is not built by Actions because LDC builds under QEMU are unreliable for that target.
 
 If you need an ARMv7 image, build it locally on a native ARMv7 system or other environment that can produce a compatible binary:
 
 ```bash
-docker buildx build --platform linux/arm/v7 -t dadoum/anisette-v3-server:armv7 .
+docker buildx build --platform linux/arm/v7 -t ghcr.io/underw8/anisette-v3-server:armv7 .
 ```
 
 ## Ansible

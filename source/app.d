@@ -5,6 +5,7 @@ import std.algorithm.searching;
 import std.array;
 import std.base64;
 import std.digest;
+import std.exception;
 import file = std.file;
 import std.format;
 import std.getopt;
@@ -71,8 +72,8 @@ int main(string[] args) {
 		"p|port", format!"The port to bind to (default: %s)"(port), &port,
 		"a|adi-path", format!"Where the provisioning information should be stored on the computer for anisette-v1 backwards compat (default: %s)"(configurationPath), &configurationPath,
 		"timeout", format!"Timeout duration for Anisette V3 in milliseconds (default: %d)"(timeoutMsecs), &timeoutMsecs,
-		"private-key", "Path to the PEM-formatted private key file for HTTPS support (requires --cert-chain)", &certificateChainPath,
-		"cert-chain", "Path to the PEM-formatted certificate chain file for HTTPS support (requires --private-key)", &privateKeyPath,
+		"private-key", "Path to the PEM-formatted private key file for HTTPS support (requires --cert-chain)", &privateKeyPath,
+		"cert-chain", "Path to the PEM-formatted certificate chain file for HTTPS support (requires --private-key)", &certificateChainPath,
 		"skip-server-startup", "If provided the server will skip HTTP binding and instead execute only initial configuration (if needed).", &skipServerStartup,
 	);
 
@@ -222,7 +223,7 @@ class AnisetteService {
 
 		res.headers["Implementation-Version"] = brandingCode;
 		res.writeBody(responseJson.toString(JSONOptions.doNotEscapeSlashes), "application/json");
-		log.infoF!"[>>] 200 OK %s"(responseJson);
+		log.info("[>>] 200 OK");
 	}
 
 	@method(HTTPMethod.GET)
@@ -251,8 +252,10 @@ class AnisetteService {
 			auto json = req.json();
 			ubyte[] identifierBytes = Base64.decode(json["identifier"].to!string());
 			ubyte[] adi_pb = Base64.decode(json["adi_pb"].to!string());
+			enforce(identifierBytes.length >= 16, "identifier must be at least 16 bytes");
 			identifier = UUID(identifierBytes[0..16]).toString();
-			tmpProvisioningPath = provisioningPath.buildPath(identifier);
+			// Per-request directory: concurrent requests may share an identifier.
+			tmpProvisioningPath = provisioningPath.buildPath(identifier ~ "-" ~ randomUUID().toString());
 
 			if (file.exists(tmpProvisioningPath)) {
 				file.rmdirRecurse(tmpProvisioningPath);
@@ -328,6 +331,7 @@ class AnisetteService {
 			ubyte[] requestedIdentifier = Base64.decode(res["identifier"].str());
 			log.infoF!"[>> %s] Got it."(requestUUID);
 
+			enforce(requestedIdentifier.length >= 16, "identifier must be at least 16 bytes");
 			identifier = UUID(requestedIdentifier[0..16]).toString();
 		} catch (Exception ex) {
 			JSONValue response = [
@@ -347,7 +351,7 @@ class AnisetteService {
 			GC.collect();
 		}
 		scope ADI adi = makeGarbageCollectedADI(libraryPath);
-		auto tmpProvisioningPath = provisioningPath.buildPath(identifier);
+		auto tmpProvisioningPath = provisioningPath.buildPath(requestUUID);
 		file.mkdirRecurse(tmpProvisioningPath);
 		adi.provisioningPath = tmpProvisioningPath;
 		scope(exit) {

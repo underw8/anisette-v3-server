@@ -36,13 +36,13 @@
     - name: Setup anisette-v3 container
       containers.podman.podman_container:
         name: anisette-v3
-        image: docker.io/dadoum/anisette-v3-server:latest
+        image: ghcr.io/underw8/anisette-v3-server:latest
         labels:
           io.containers.autoupdate: registry
           PODMAN_SYSTEMD_UNIT: pod-anisette-v3.service
         state: created
         rm: true
-        volume: /home/Alcoholic/.config/anisettev3/lib/
+        volume: /home/Alcoholic/.config/anisette-v3/lib/
         publish: 6969:6969
       become_user: rootless
 
