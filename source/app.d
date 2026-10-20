@@ -221,7 +221,7 @@ class AnisetteService {
 			"X-Apple-I-MD-RINFO": to!string(17106176),
 			"X-Apple-I-MD-LU": v1Device.localUserUUID,
 			"X-Apple-I-SRL-NO": "0",
-			"X-MMe-Client-Info": v1Device.serverFriendlyDescription,
+			"X-MMe-Client-Info": clientInfo, // Not the stored value: devices created before the switch still hold the Mac string.
 			"X-Apple-I-TimeZone": time.timezone.dstName,
 			"X-Apple-Locale": "en_US",
 			"X-Mme-Device-Id": v1Device.uniqueDeviceIdentifier,
