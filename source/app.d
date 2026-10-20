@@ -232,6 +232,18 @@ class AnisetteService {
 		log.info("[>>] 200 OK");
 	}
 
+	// SideStore server list pointing at this server, using the address the client reached it by.
+	@method(HTTPMethod.GET)
+	@path("/servers.json")
+	void getServers(HTTPServerRequest req, HTTPServerResponse res) {
+		JSONValue self = [
+			"name": "Self-hosted (" ~ req.host ~ ")",
+			"address": (req.tls ? "https://" : "http://") ~ req.host
+		];
+		JSONValue list = ["servers": [self]];
+		res.writeBody(list.toString(JSONOptions.doNotEscapeSlashes), "application/json");
+	}
+
 	@method(HTTPMethod.GET)
 	@path("/v3/client_info")
 	void getClientInfo(HTTPServerRequest req, HTTPServerResponse res) {
